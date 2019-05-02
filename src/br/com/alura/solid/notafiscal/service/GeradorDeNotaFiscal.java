@@ -1,32 +1,31 @@
 package br.com.alura.solid.notafiscal.service;
 
-import br.com.alura.solid.notafiscal.dao.EnviadorDeEmail;
-import br.com.alura.solid.notafiscal.dao.NotaFiscalDao;
+import java.util.List;
+
+import br.com.alura.solid.notafiscal.dao.AcaoGeraNotaFiscal;
 import br.com.alura.solid.notafiscal.model.Fatura;
 import br.com.alura.solid.notafiscal.model.NotaFiscal;
 
 public class GeradorDeNotaFiscal {
-	private final EnviadorDeEmail email;
-    private final NotaFiscalDao dao;
+	private List<AcaoGeraNotaFiscal> acoes;
 
-    public GeradorDeNotaFiscal(EnviadorDeEmail email, NotaFiscalDao dao) {
-        this.email = email;
-        this.dao = dao;
-    }
+	public GeradorDeNotaFiscal(List<AcaoGeraNotaFiscal> acoes) {
+		this.acoes = acoes;
+	}
 
-    public NotaFiscal gera(Fatura fatura) {
+	public NotaFiscal gera(Fatura fatura) {
 
-        double valor = fatura.getValorMensal();
+		double valor = fatura.getValorMensal();
 
-        NotaFiscal nf = new NotaFiscal(valor, impostoSimplesSobreO(valor));
+		NotaFiscal nf = new NotaFiscal(valor, impostoSimplesSobreO(valor));
+		for (AcaoGeraNotaFiscal acaoGeraNotaFiscal : acoes) {
+			acaoGeraNotaFiscal.executa(nf);
+		}
 
-        email.enviaEmail(nf);
-        dao.persiste(nf);
+		return nf;
+	}
 
-        return nf;
-    }
-
-    private double impostoSimplesSobreO(double valor) {
-        return valor * 0.06;
-    }
-}	
+	private double impostoSimplesSobreO(double valor) {
+		return valor * 0.06;
+	}
+}
